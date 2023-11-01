@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import React, { FormEvent, useState } from "react";
 import { db } from "../firebase";
 import toast from "react-hot-toast";
+import ModelSelection from "./ModelSelection";
+import useSWR from "swr";
 
 type Props = {
   ChatId: string;
@@ -16,7 +18,9 @@ function ChatInput({ ChatId }: Props) {
 
   // useSWR to get model
 
-  const model = "text-devinci-003 ";
+  const { data: model } = useSWR("model", {
+    fallbackData: "text-davinci-003",
+  });
 
   const sendMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,7 +56,9 @@ function ChatInput({ ChatId }: Props) {
 
     const notifacation = toast.loading("Chat GPT is thinking....");
 
-    await fetch("api/askQuestion", {
+    console.log(notifacation);
+
+    await fetch("/api/auth/askQuestion", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,7 +79,7 @@ function ChatInput({ ChatId }: Props) {
 
   return (
     <div className="bg-gray-700/50 text-gray-400 rounded-lg text-sm ">
-      <form onSubmit={(e) => sendMessage} className="p-5 space-x-5 flex ">
+      <form onSubmit={sendMessage} className="p-5 space-x-5 flex ">
         <input
           className="bg-transparent focus:outline-none flex-1 disabled:cursor-not-allowed disabled:text-gray-300 "
           disabled={!session}
@@ -91,7 +97,9 @@ function ChatInput({ ChatId }: Props) {
           <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
         </button>
       </form>
-      <div>{/* modal selection */}</div>
+      <div className=" md:hidden">
+        <ModelSelection />
+      </div>
     </div>
   );
 }
